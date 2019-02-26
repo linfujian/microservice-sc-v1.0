@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: service-hi
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: fujian
+Implementation-Vendor-Id: com.github.linfujian
+Build-Jdk: 1.8.0_121
+Implementation-URL: http://maven.apache.org/module-service-hi
+Created-By: Maven Integration for Eclipse
+

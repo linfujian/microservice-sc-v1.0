@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: service-gateway
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: fujian
+Implementation-Vendor-Id: com.github.linfujian
+Build-Jdk: 1.8.0_121
+Implementation-URL: http://maven.apache.org/module-service-gateway
+Created-By: Maven Integration for Eclipse
+
