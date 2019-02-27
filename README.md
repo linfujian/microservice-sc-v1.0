@@ -167,3 +167,86 @@ management: #该设置允许该服务可以被http访问，如查看服务 actua
 ```
 * 启动该服务，访问 http://localhost:8762/hi?name=fujian 可以直接访问该服务，在 http://localhost:8761/ 中可以看到该服务已注册到注册中心
 
+## module-service-ribbon 访问服务的客户端
+
+* pom 文件中相关依赖
+
+```
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+		</dependency>
+```
+* 访问服务的逻辑
+```
+@Service
+public class HiService {
+
+	@Autowired
+	RestTemplate restTemplate;
+	
+	@HystrixCommand(fallbackMethod="hiError")
+	public String sayhi(String name) {
+		return restTemplate.getForObject("http://SERVICE-HI/hi?name="+name, String.class);
+	}
+	
+	public String hiError(String name) {
+		return "hi," + name + ",sorry,error!";
+	}
+}
+
+```
+```
+@SpringBootApplication
+@EnableEurekaClient
+@EnableDiscoveryClient
+@EnableHystrix
+public class ServiceRibbonApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ServiceRibbonApplication.class, args);
+	}
+	
+	@Bean
+	@LoadBalanced
+	RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
+}
+```
+首先看方法上的 @HystrixCommand 注释，该注释表明调用该方法服务不可用时交由 fallbackMethod 指向的方法处理。然后 sayhi 方法内使用 restTemplate 去访问 service-hi 服务，由于该服务已在注册中心注册，所以访问 SERVICE-HI 唯一标识便可访问到已注册的服务。restTemplate 在启动类中通过@Bean 实例化，通过 @LoadBalanced 使其具有负载均衡功能，即当通过该模块访问一个服务集群时会均衡分发请求。
+
+* application.yml 配置
+```
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+      
+server:
+  port: 8764
+
+spring:
+  application:
+    name: service-ribbon
+
+```
+
+
+
+
+
+
+
