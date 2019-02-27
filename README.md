@@ -2,10 +2,10 @@
 this is a microservice platform based on spring cloud
 
 ## 前言
-这是一个基于springcloud的分布式微服务架构，版本v1.0是无业务组件逻辑的架构。在后续会不断优化框架使其满足一些底层业务需求。
+这是一个基于 springcloud 的分布式微服务架构，版本 v1.0是无业务组件逻辑的架构。在后续会不断优化框架使其满足一些底层业务需求。
 
 ## 项目结构
-
+如下 module 项目按照序号依次排序讲解，parent 为父模块，主要是做了 spring-boot 和 spring-cloud 依赖引入和版本管理，spring-boot 版本为2.0.3.RELEASE，spring-cloud 版本为 Finchley.RELEASE.
 ```
 parent
   ├─.settings
@@ -25,4 +25,15 @@ parent
   │ 
   ├─module-service-zuul ##4.1.路由转发服务，负责将客户的请求根据url路径分发到不同的服务访问客户端(3.1 or 3.2)
 
+```
+
+## module-eureka-server 服务注册中心
+
+pom文件引入eureka-server依赖
+
+```
+<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
 ```
