@@ -243,7 +243,64 @@ spring:
     name: service-ribbon
 
 ```
+## module-service-feign 访问服务的客户端
 
+* pom文件引入相关依赖
+```
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+```
+
+* 业务逻辑
+```
+@FeignClient(value="service-hi", fallback=HiServiceHystrix.class)
+public interface HiSerivceInterface {
+
+	@GetMapping("/hi")
+	public String sayHi(@RequestParam(value="name") String name);
+}
+```
+```
+@Component
+public class HiServiceHystrix implements HiSerivceInterface {
+
+	@Override
+	public String sayHi(String name) {
+		return "sorry," + name + ", it has a error";
+	}
+
+}
+```
+@FeignClient的 value 将 /hi 访问转递给 service-hi 服务，假如访问服务失败则请求交由 HiServiceHystrix 处理，可以看到 HiServiceHystrix 实现了 HiSerivceInterface 接口。
+
+* application.yml 配置文件
+```
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+      
+server:
+  port: 8765
+  
+spring:
+  application:
+    name: service-feign
+    
+feign:
+  hystrix:
+    enabled: true
+```
 
 
 
