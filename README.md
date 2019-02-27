@@ -2,7 +2,7 @@
 this is a microservice platform based on spring cloud
 
 ## 前言
-这是一个基于springcloud的分布式微服务架构，版本v1.0是无业务逻辑的架构。在后续会不断优化框架使其满足一些底层业务需求。
+这是一个基于springcloud的分布式微服务架构，版本v1.0是无业务组件逻辑的架构。在后续会不断优化框架使其满足一些底层业务需求。
 
 ## 项目结构
 
