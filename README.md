@@ -29,11 +29,44 @@ parent
 
 ## module-eureka-server 服务注册中心
 
-pom文件引入eureka-server依赖
+* pom文件引入eureka-server依赖
 
 ```
 <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
 </dependency>
+```
+
+* 启动类 EurekaServerApplication 中添加激活 Eureka server 相关配置的注解
+
+```
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaServerApplication.class, args);
+	}
+}
+```
+
+* application.yml 文件中相关配置
+
+```
+server:
+  port: 8761 #服务启动后监听端口
+
+eureka:
+  instance:
+    hostname: localhost #服务实例访问ip
+  client:
+    register-with-eureka: false #本身为服务注册中心，不需要注册
+    fetch-registry: false
+    service-url: 
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/ #需要注册到该中心的服务需要访问的地址url
+
+spring:
+  application:
+    name: eureka-server #该注册中心的名称，该名称唯一，可以被其他服务识别
 ```
