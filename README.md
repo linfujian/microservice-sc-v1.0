@@ -70,3 +70,100 @@ spring:
   application:
     name: eureka-server #该注册中心的名称，该名称唯一，可以被其他服务识别
 ```
+
+* 启动服务注册中心eureka server,访问 http://localhost:8761/eureka/
+
+## module-service-hi 一个可以注册到服务注册中心的服务
+
+* pom 文件引入相关依赖
+
+```
+	<dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+        	<groupId>org.springframework.cloud</groupId>
+        	<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+	<dependency>
+        	<groupId>org.springframework.cloud</groupId>
+        	<artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+        </dependency>
+```
+```
+** eureka-client - 可注册的客户端依赖 **
+** starter-web - web 服务 **
+** hystrix - 熔断器相关组件 **
+** actuator - 监控相关组件 **
+```
+* 定义一个 controller 类添加服务业务逻辑
+```
+@SpringBootApplication
+@EnableEurekaClient
+@EnableDiscoveryClient
+@RestController
+@EnableHystrix
+@EnableHystrixDashboard
+@EnableCircuitBreaker
+public class ServiceHiApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ServiceHiApplication.class, args);
+	}
+	
+	@Value("${server.port}")
+	String port;
+	
+	@RequestMapping("/hi")
+	@HystrixCommand(fallbackMethod="hiError")
+	public String sayHi(@RequestParam(value="name", defaultValue="fujian") String name) {
+		return "hi, " + name + ", i am from port:" + port;
+	}
+	
+	public String hiError(String name) {
+		return "hi, " + name + ", error happens";
+	}
+}
+
+```
+```
+@EnableEurekaClient - 表明这是一个可注册的客户端
+@EnableDiscoveryClient - 作用同上
+@EnableHystrix/@EnableCircuitBreaker - 使其具有熔断器功能
+@EnableHystrixDashboard - 使其具有熔断器dashboard功能
+@RestController - 这是一个cotroller
+```
+* application.yml 相关配置信息
+```
+server:
+  port: 8762
+  
+spring:
+  application:
+    name: service-hi
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/ #服务注册到该地址的服务注册中心
+
+management: #该设置允许该服务可以被http访问，如查看服务 actuator 等信息
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "*"
+```
+* 启动该服务，访问 http://localhost:8762/hi?name=fujian 可以直接访问该服务，在 http://localhost:8761/ 中可以看到该服务已注册到注册中心
+
