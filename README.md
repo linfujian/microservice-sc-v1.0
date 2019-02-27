@@ -301,7 +301,108 @@ feign:
   hystrix:
     enabled: true
 ```
+## module-service-zuul 路由转发服务
 
+* pom 相关依赖
+```
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-zuul</artifactId>
+		</dependency>
+```
+* 启动类 ServiceZuulApplication
+```
+@SpringBootApplication
+@EnableEurekaClient
+@EnableDiscoveryClient
+@EnableZuulProxy
+public class ServiceZuulApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ServiceZuulApplication.class, args);
+	}
+}
+```
+@EnableZuulProxy 启动zuul功能
+
+* application.yml 中配置路由 path
+```
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+server:
+  port: 8769
+  
+spring:
+  application:
+    name: service-zuul
+    
+zuul:
+  routes:
+    api-a:
+      path: /api-a/**
+      service-id: service-ribbon #请求路径/api-a/ 路由给 service-ribbon 服务
+    api-b:
+      path: /api-b/**
+      service-id: service-feign #请求路径/api-b/ 路由给 service-feign 服务
+```
+
+## module-service-gateway 路由服务
+
+* pom 相关依赖
+```
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-gateway</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+```
+* application.yml 相关配置
+```
+server:
+  port: 8081
+  
+spring:
+  application:
+    name: service-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: true
+      routes: #将请求路径 /demo/** 路由至 service-hi 服务，filter 将请求 /path 前缀去掉
+      - id: service-hi
+        uri: lb://SERVICE-HI
+        predicates:
+        - Path=/demo/**
+        filters:
+        - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+```
 
 
 
