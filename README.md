@@ -404,6 +404,136 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
 ```
 
+## module-config-server 配置服务
+该服务提供了实时读取配置信息源的服务，当配置源的配置信息修改后，该服务会实时获取最新的配置信息，从而使读取该配置服务的客户端获取最新的配置信息。本次 demo 主要读取了 [git repository](https://github.com/linfujian/springCloudConfig) 中的配置信息。
+
+* pom 文件依赖
+```
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-server</artifactId>
+		</dependency>
+```
+* 启动类加相关注解
+```
+@SpringBootApplication
+@EnableEurekaClient
+@EnableConfigServer
+public class ConfigServerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigServerApplication.class, args);
+	}
+}
+```
+* application.yml 中配置相关的配置源信息
+```
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/linfujian/springCloudConfig  #git 仓库的 uri
+          search-paths:
+          - config #搜索路径
+      label: master #指定哪一个分支
+
+server:
+  port: 8888
+      
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+```
+
+## module-config-client 读取配置信息的客户端，一般来说，将配置信息交给配置服务管理的服务都为客户端
+
+* application.yml 相关依赖
+```
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bus-amqp</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+```
+
+* 相关测试逻辑代码，从配置服务中读取 foo 属性
+```
+@SpringBootApplication
+@RestController
+@EnableEurekaClient
+@EnableDiscoveryClient
+@RefreshScope
+public class ConfigClientApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigClientApplication.class, args);
+	}
+	@Value("${foo}")
+	String foo;
+	
+	@GetMapping("/hi")
+	public String readConfigValue() {
+		return foo;
+	}
+}
+```
+@RefreshScope 对每次方法的调用都会刷新实例,也就是会读取到最新的属性 foo ，可以看下注解注释。
+
+* bootstrap.properties 启动文件，该文件在 application.yml 加载前加载
+```
+spring.application.name=config-client
+spring.cloud.config.label=master
+spring.cloud.config.profile=dev
+server.port=8882
+
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
+spring.cloud.config.discovery.enabled=true #可以发现 配置服务 功能开启
+spring.cloud.config.discovery.serviceId=config-server #指向配置服务的 name
+```
+* application.yml
+```
+##rabbitmq 连接 相关配置，作为消息总线
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+
+spring.cloud.bus.enabled=true
+spring.cloud.bus.trace.enabled=true
+management.endpoints.web.exposure.include=bus-refresh #该服务可以接受外部 bus-refresh web 请求，来更新客户端读取的配置信息
+```
+* 消息总线的使用
+当你在postman等插件中发送 http://localhost:8882/actuator/bus-refresh POST 请求时，该请求一方面会让8882实例通过 config-server 读取 git repository 最新配置信息；另一方面会发至消息总线，因为其他实例订阅了总线，所以也会收到更新请求去读取最新的配置信息，见下图：
+
+
+
 
 
 
