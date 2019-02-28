@@ -532,6 +532,13 @@ management.endpoints.web.exposure.include=bus-refresh #该服务可以接受外�
 * 消息总线的使用
 当你在postman等插件中发送 http://localhost:8882/actuator/bus-refresh POST 请求时，该请求一方面会让8882实例通过 config-server 读取 git repository 最新配置信息；另一方面会发至消息总线，因为其他实例订阅了总线，所以也会收到更新请求去读取最新的配置信息，见下图：
 
+![消息总线更新](https://github.com/linfujian/microservice-sc-v1.0/blob/master/src/main/java/com/github/linfujian/parent/image/messagebus.png)
+
+```
+1.web 前端发送 bus-refresh 请求，该请求达到8882实例后，请求 config-server 读取 git repo 获得最新配置信息
+2.bus-refresh 请求同时也会发给消息总线，订阅了该总线的8881和8883实例接收到配置更新请求，也去请求 config-server 读取 git repo 获得最新配置信息
+```
+
 
 
 
