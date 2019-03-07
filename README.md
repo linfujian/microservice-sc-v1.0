@@ -543,6 +543,7 @@ management.endpoints.web.exposure.include=bus-refresh #该服务可以接受外�
 
 ### aop拦截线程池执行子线程，保证上下文在父子线程间传递
 
+具体位置为microservice-sc-v1.0/module-service-hi/src/main/java/servicehi/asyncthreadaop/ dev分支
 ```
 每个用户登陆系统后，该用户需要异步执行多个方法，方法内涉及到从securityContext和LogContext中读取用户信息
 ```
