@@ -539,6 +539,141 @@ management.endpoints.web.exposure.include=bus-refresh #该服务可以接受外�
 2.bus-refresh 请求同时也会发给消息总线，订阅了该总线的8881和8883实例接收到配置更新请求，也去请求 config-server 读取 git repo 获得最新配置信息
 ```
 
+## 如下是底层比较常用的业务组件
+
+### aop拦截线程池执行子线程，保证上下文在父子线程间传递
+
+具体位置为microservice-sc-v1.0/module-service-hi/src/main/java/servicehi/asyncthreadaop/ dev分支
+```
+每个用户登陆系统后，该用户需要异步执行多个方法，方法内涉及到从securityContext和LogContext中读取用户信息
+```
+抽象出来便是
+```
+用户登录的主线程需要异步(多子线程)执行多个方法，方法中需要保持用户的上下文信息
+```
+
+解决思路：
+```
+aop拦截子线程的调用，将上下文通过封装的Runnable对象传递给子线程。因为aop是beanPostProcessor后处理器，只能拦截1)bean中的2)方法，所以逆推得 子线程来自 一个2)线程池的submit执行合适一些，而且这个线程池对象是1)一个bean。
+```
+
+实现：
+
+1、bean形式存在的线程池
+```
+@Configuration
+public class AsynExecutor {
+	
+	@Bean
+	@Lazy
+	public ExecutorService defaultExecutor() {
+		return Executors.newCachedThreadPool();
+	}
+
+}
+```
+
+2、该线程池提供的线程可以通过注解的方式被业务方法体异步使用
+```
+@Async("defaultExecutor")
+@Target({ElementType.METHOD,ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface DefaultAsyncThread {
+
+	
+}
+```
+
+3、标注如上注解的方法在被线程池中线程执行时添加AOP
+
+```
+public class DefaultExecutorSubmitAspect {
+
+	@Around("execution(* java.util.concurrent.Executor.*(..))")
+	@SneakyThrows
+	public Object intercept(ProceedingJoinPoint joinPoint) {
+		
+		Object[] args = joinPoint.getArgs();
+		for(int i =0; i< args.length; i++) {
+			args[i] = processArgs(args[i]);
+		}
+		
+		return joinPoint.proceed();
+	}
+	
+	Object processArgs(Object arg) {
+		if(arg instanceof Runnable) {
+			Runnable r = (Runnable)arg;
+			return new RunnableWeave(r);
+		}
+		if(arg instanceof Callable<?>) {
+			Callable<?> c = (Callable<?>)arg;
+			return new CallableWeave<>(c);
+		}
+		if(arg instanceof Collection<?>) {
+			Collection<?> cs = (Collection<?>)arg;
+			List<Object> collect = cs.stream().map(this::processArgs).collect(Collectors.toList());
+			return collect;
+		}
+		return arg;
+	}
+}
+```
+
+4、将上下文传递给子线程，从而保证 子线程里可以读取用户登录信息(父线程上下文信息)
+
+```
+public class RunnableWeave  implements Runnable {
+
+	private final Runnable r;
+	private final Map<String, String> MDCContextMap;
+	private final SecurityContext securityContext;
+	
+	public RunnableWeave(Runnable r) {
+		this.r = r;
+		this.MDCContextMap = MDC.getCopyOfContextMap();
+		securityContext = SecurityContextHolder.getContext();
+	}
+	
+	@Override
+	public void run() {
+		MDC.setContextMap(MDCContextMap);
+		SecurityContextHolder.setContext(securityContext);
+		r.run();
+		SecurityContextHolder.clearContext();
+		MDC.setContextMap(new HashMap<>());
+	}
+
+}
+```
+```
+public class CallableWeave<V> implements Callable<V> {
+
+	private final Callable<V> c;
+	private final Map<String, String> MDCContextMap;
+	private final SecurityContext securityContext;
+	
+	public CallableWeave(Callable<V> c) {
+		this.c = c;
+		this.MDCContextMap = MDC.getCopyOfContextMap();
+		this.securityContext = SecurityContextHolder.getContext();
+	}
+	@Override
+	public V call() throws Exception {
+		MDC.setContextMap(MDCContextMap);
+		SecurityContextHolder.setContext(securityContext);
+		V v = c.call();
+		MDC.setContextMap(new HashMap<>());
+		SecurityContextHolder.clearContext();
+		return v;
+	}
+
+}
+```
+
+
+
 
 
 
