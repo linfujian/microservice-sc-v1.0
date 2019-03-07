@@ -27,8 +27,12 @@ public class ServiceHiApplication {
 		SpringApplication.run(ServiceHiApplication.class, args);
 	}
 	
-	@Value("${server.port}")
 	String port;
+	
+	@Value("${server.port}")
+	public void port(String port) {
+		this.port = port;
+	}
 	
 	@RequestMapping("/hi")
 	@HystrixCommand(fallbackMethod="hiError")
