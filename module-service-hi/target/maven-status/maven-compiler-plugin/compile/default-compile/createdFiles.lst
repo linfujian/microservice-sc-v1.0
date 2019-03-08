@@ -1,7 +1,10 @@
+META-INF\maven\com.github.linfujian\module-service-hi\pom.properties
+META-INF\MANIFEST.MF
 servicehi\propertyutil\ReadProperyFromDB.class
 servicehi\asyncthreadaop\DefaultExecutorSubmitAspect.class
 servicehi\asyncthreadaop\CallableWeave.class
 servicehi\securityconfig\SecurityConfig.class
+META-INF\maven\com.github.linfujian\module-service-hi\pom.xml
 servicehi\asyncthreadaop\DefaultAsyncThread.class
 servicehi\asyncthreadaop\RunnableWeave.class
 servicehi\ServiceHiApplication.class

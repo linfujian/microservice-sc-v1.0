@@ -1,1 +1,4 @@
+META-INF\MANIFEST.MF
+META-INF\maven\com.github.linfujian\module-eureka-server\pom.xml
 eurekaserver\EurekaServerApplication.class
+META-INF\maven\com.github.linfujian\module-eureka-server\pom.properties

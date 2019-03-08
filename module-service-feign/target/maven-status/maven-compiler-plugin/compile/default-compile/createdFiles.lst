@@ -1,0 +1,4 @@
+servicefeign\ServiceFeignApplication.class
+servicefeign\service\HiServiceHystrix.class
+servicefeign\service\HiSerivceInterface.class
+servicefeign\controller\HiController.class
