@@ -1,0 +1,3 @@
+serviceribbon\ServiceRibbonApplication.class
+serviceribbon\service\HiService.class
+serviceribbon\controller\HiController.class
