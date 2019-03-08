@@ -672,6 +672,42 @@ public class CallableWeave<V> implements Callable<V> {
 }
 ```
 
+### 数据库里读取属性到system中，以便@Value(${})从system中获取属性值
+
+该方式合适机器部署单一应用，属性是存到系统环境中的，若部署其他应用也可以读到。
+
+代码如下：
+module-service-hi/src/main/java/servicehi/propertyutil/ReadProperyFromDB.java
+
+```
+@Component
+public class ReadProperyFromDB implements BeanFactoryPostProcessor {
+
+	@Override
+	@SneakyThrows
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		
+		Environment env = beanFactory.getBean(Environment.class);
+		String url = env.getProperty("spring.datasource.url");
+		String username = env.getProperty("spring.datasource.data-username");
+		String password = env.getProperty("spring.datasource.data-password");
+		
+		@Cleanup
+		Connection con = DriverManager.getConnection(url, username, password);
+		
+		@Cleanup
+		Statement sta = con.createStatement();
+		
+		@Cleanup
+		ResultSet rs = sta.executeQuery("select pro_key, pro_val from demo where 1=1");
+		
+		while(rs.next()) {
+			System.setProperty(rs.getString(1), rs.getString(2));
+		}
+		
+	}	
+}
+```
 
 
 
