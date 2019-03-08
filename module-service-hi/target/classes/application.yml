@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: service-hi
+  datasource:
+    url: jdbc:mysql://localhost:3306/gene
+    data-username: root
+    data-password: root
 
 eureka:
   client:
@@ -18,3 +22,4 @@ management:
       cors:
         allowed-origins: "*"
         allowed-methods: "*"
+        

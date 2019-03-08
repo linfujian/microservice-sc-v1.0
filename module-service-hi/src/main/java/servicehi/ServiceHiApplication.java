@@ -28,6 +28,8 @@ public class ServiceHiApplication {
 	}
 	
 	String port;
+	@Value("${value}")
+	String value;
 	
 	@Value("${server.port}")
 	public void port(String port) {
@@ -37,7 +39,7 @@ public class ServiceHiApplication {
 	@RequestMapping("/hi")
 	@HystrixCommand(fallbackMethod="hiError")
 	public String sayHi(@RequestParam(value="name", defaultValue="fujian") String name) {
-		return "hi, " + name + ", i am from port:" + port;
+		return "hi, " + name + ", i am from port:" + port + " and i read property from db is " + value;
 	}
 	
 	public String hiError(String name) {

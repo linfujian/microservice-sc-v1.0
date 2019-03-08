@@ -1,1 +1,8 @@
+servicehi\propertyutil\ReadProperyFromDB.class
+servicehi\asyncthreadaop\DefaultExecutorSubmitAspect.class
+servicehi\asyncthreadaop\CallableWeave.class
+servicehi\securityconfig\SecurityConfig.class
+servicehi\asyncthreadaop\DefaultAsyncThread.class
+servicehi\asyncthreadaop\RunnableWeave.class
 servicehi\ServiceHiApplication.class
+servicehi\asyncthreadaop\AsynExecutor.class
